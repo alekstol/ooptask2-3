@@ -1,10 +1,10 @@
 package org.example.game;
 
+import org.example.model.Player;
+import org.example.strategy.HighestCardStrategy;
+import org.example.strategy.LowestCardStrategy;
+import org.example.strategy.RandomStrategy;
 import org.junit.jupiter.api.Test;
-import ru.hearts.game.HeartsGame;
-import ru.hearts.model.Player;
-import ru.hearts.strategy.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

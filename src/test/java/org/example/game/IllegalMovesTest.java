@@ -1,15 +1,11 @@
 package org.example.game;
-
 import org.example.model.*;
 import org.example.strategy.LowestCardStrategy;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
-
 class IllegalMoveTest {
-
     @Test
     void playingCardNotInHandThrows() {
         Player a = new Player("A");
@@ -19,7 +15,6 @@ class IllegalMoveTest {
         assertThrows(IllegalMoveException.class,
                 () -> g.playCard(a, new Card(Suit.HEARTS, Rank.ACE)));
     }
-
     @Test
     void playingHeartsAsFirstMoveBeforeBrokenThrows() {
         Player a = new Player("A");

@@ -1,26 +1,22 @@
 package org.example.model;
-
+import org.junit.jupiter.api.Test;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
-
 class CardTest {
-
     @Test
     void penaltyForHeartIsOne() {
         assertEquals(1, new Card(Suit.HEARTS, Rank.TWO).penaltyPoints());
         assertEquals(1, new Card(Suit.HEARTS, Rank.ACE).penaltyPoints());
     }
-
     @Test
     void penaltyForQueenOfSpadesIsThirteen() {
         assertEquals(13, new Card(Suit.SPADES, Rank.QUEEN).penaltyPoints());
     }
-
     @Test
     void noPenaltyForOtherCards() {
         assertEquals(0, new Card(Suit.CLUBS, Rank.ACE).penaltyPoints());
         assertEquals(0, new Card(Suit.SPADES, Rank.KING).penaltyPoints());
     }
-
     @Test
     void sortingUsesSuitThenRank() {
         List<Card> hand = List.of(
@@ -32,7 +28,6 @@ class CardTest {
         assertEquals(new Card(Suit.CLUBS, Rank.ACE), sorted.get(1));
         assertEquals(new Card(Suit.HEARTS, Rank.TWO), sorted.get(2));
     }
-
     @Test
     void equalsAndHashCode() {
         assertEquals(new Card(Suit.HEARTS, Rank.KING), new Card(Suit.HEARTS, Rank.KING));

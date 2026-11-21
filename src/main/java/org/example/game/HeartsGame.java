@@ -18,7 +18,6 @@ public class HeartsGame {
     private final Map<String, Strategy> strategies = new LinkedHashMap<>();
     private final List<GameEvent> events = new ArrayList<>();
 
-    // изменяемое состояние — только здесь
     private int roundNumber = 0;
     private List<Card> currentTrick = new ArrayList<>();
     private Suit currentSuit = null;
@@ -47,8 +46,6 @@ public class HeartsGame {
                 currentSuit, heartsBroken, trickLeader);
     }
 
-    // ===== Партия =====
-
     /** Играет партию до {@code maxScore} очков у любого игрока. */
     public void playGame(int maxScore) {
         players.forEach(Player::resetTotalScore);
@@ -75,8 +72,6 @@ public class HeartsGame {
         return sb.toString().trim();
     }
 
-    // ===== Раунд =====
-
     /** Один раунд: раздача, передача, 13 взяток, подсчёт. */
     public RoundResult playRound() {
         dealCards();
@@ -93,7 +88,6 @@ public class HeartsGame {
         Collections.shuffle(deck, random);
 
         players.forEach(p -> p.getHand().forEach(p::removeCard)); // очистка
-        // очистка руки: аккуратнее — через явное удаление всех карт
         for (Player p : players) {
             for (Card c : p.getHand()) p.removeCard(c);
         }
@@ -109,11 +103,10 @@ public class HeartsGame {
 
     /** Передаёт по 3 карты: направление чередуется каждый раунд (лево, право, через одного). */
     void passCards() {
-        int dir = roundNumber % 3; // 0 — влево, 1 — вправо, 2 — через одного
-        if (dir == 2) { // «через одного» — просто чередуем, для простоты как влево
+        int dir = roundNumber % 3;
+        if (dir == 2) {
             dir = 0;
         }
-
         List<List<Card>> toPass = new ArrayList<>();
         for (Player p : players) {
             List<Card> hand = p.getHand();
@@ -123,43 +116,32 @@ public class HeartsGame {
                     .toList();
             toPass.add(new ArrayList<>(chosen));
         }
-
         for (int i = 0; i < players.size(); i++)
             for (Card c : toPass.get(i)) players.get(i).removeCard(c);
-
         int n = players.size();
         for (int i = 0; i < n; i++) {
             int target = (dir == 0) ? (i + 1) % n : (i - 1 + n) % n;
             for (Card c : toPass.get(i)) players.get(target).addCard(c);
         }
-
         events.add(new GameEvent(GameEvent.Type.PASS,
                 "Передача " + (dir == 0 ? "влево" : "вправо")));
     }
-
-    // ===== Взятка =====
-
     /** Одна взятка: по очереди все кладут карту. */
     void playTrick() {
         currentTrick.clear();
         currentSuit = null;
-
         for (int step = 0; step < players.size(); step++) {
             int idx = (trickLeader + step) % players.size();
             Player p = players.get(idx);
-
             List<Card> legal = legalMoves(p);
             if (legal.isEmpty())
                 throw new IllegalStateException("Нет допустимых ходов у " + p.getName());
-
             Strategy s = strategies.get(p.getName());
             if (s == null) throw new IllegalStateException("Нет стратегии у " + p.getName());
 
             Card chosen = s.chooseCard(legal, snapshot());
             playCard(p, chosen);
         }
-
-        // победитель — старшая карта в масти хода
         Card best = currentTrick.get(0);
         int bestIdx = 0;
         for (int i = 1; i < currentTrick.size(); i++) {
@@ -170,7 +152,6 @@ public class HeartsGame {
                 bestIdx = i;
             }
         }
-        // корректно: победитель — максимум среди карт масти хода
         bestIdx = 0;
         for (int i = 1; i < currentTrick.size(); i++) {
             Card c = currentTrick.get(i);
@@ -193,9 +174,8 @@ public class HeartsGame {
                     "Взятку взял " + players.get(winner).getName() + ", без очков"));
         }
 
-        trickLeader = winner; // следующий начинает победитель
+        trickLeader = winner;
     }
-
     /**
      * Допустимые ходы для игрока.
      * <ul>
@@ -206,7 +186,6 @@ public class HeartsGame {
     public List<Card> legalMoves(Player p) {
         List<Card> hand = p.getHand();
         if (hand.isEmpty()) return List.of();
-
         if (currentSuit == null) {
             List<Card> noHearts = hand.stream()
                     .filter(c -> c.getSuit() != Suit.HEARTS)
@@ -214,7 +193,6 @@ public class HeartsGame {
             if (!heartsBroken && !noHearts.isEmpty()) return noHearts;
             return hand;
         }
-
         List<Card> inSuit = hand.stream()
                 .filter(c -> c.getSuit() == currentSuit)
                 .toList();
@@ -226,14 +204,12 @@ public class HeartsGame {
         if (!heartsBroken && !noHearts.isEmpty()) return noHearts;
         return hand;
     }
-
     /** Кладёт карту. Бросает {@link IllegalMoveException}, если ход недопустим. */
     public void playCard(Player p, Card c) {
         if (!p.hasCard(c))
             throw new IllegalMoveException("Карты " + c + " нет в руке игрока " + p.getName());
         if (!legalMoves(p).contains(c))
             throw new IllegalMoveException("Недопустимый ход: " + c + " (масть хода " + currentSuit + ")");
-
         p.removeCard(c);
         currentTrick.add(c);
         if (currentSuit == null) currentSuit = c.getSuit();
@@ -241,9 +217,6 @@ public class HeartsGame {
 
         events.add(new GameEvent(GameEvent.Type.PLAY, p.getName() + " → " + c));
     }
-
-    // ===== Конец раунда =====
-
     RoundResult endRound() {
         // «Забрать всё»: если один игрок собрал все 26 — он получает 0, остальные +26
         int totalPenalty = players.stream().mapToInt(Player::getRoundScore).sum();
@@ -260,10 +233,8 @@ public class HeartsGame {
             scores.put(p.getName(), p.getRoundScore());
             p.commitRoundScore();
         }
-
         events.add(new GameEvent(GameEvent.Type.ROUND_END,
                 "Раунд " + roundNumber + ": " + scores + (shootMoon ? " (забрал всё!)" : "")));
-
         currentTrick.clear();
         currentSuit = null;
         heartsBroken = false;

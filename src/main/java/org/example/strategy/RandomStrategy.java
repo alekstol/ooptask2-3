@@ -1,11 +1,8 @@
 package org.example.strategy;
-
 import org.example.model.Card;
 import org.example.model.GameState;
-
 import java.util.List;
 import java.util.Random;
-
 /** Случайный ход из допустимых. Генератор передаётся извне — для воспроизводимости. */
 public class RandomStrategy implements Strategy {
 

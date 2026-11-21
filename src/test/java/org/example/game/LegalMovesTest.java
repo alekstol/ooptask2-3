@@ -5,6 +5,7 @@ import org.example.model.Player;
 import org.example.model.Rank;
 import org.example.model.Suit;
 import org.example.strategy.LowestCardStrategy;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,6 @@ class LegalMovesTest {
         HeartsGame g = gameWith(p, new Player("B"), new Player("C"));
         assertEquals(1, g.legalMoves(p).size());
     }
-
     @Test
     void mustFollowSuitWhenPossible() {
         Player a = new Player("A");
@@ -50,28 +50,15 @@ class LegalMovesTest {
         g.setStrategy("A", new LowestCardStrategy());
         g.setStrategy("B", new LowestCardStrategy());
         g.setStrategy("C", new LowestCardStrategy());
-
-        // «эмулируем»: A сходил в трефы
-        // проще проверить через playCard в раунде — но используем legalMoves после установки масти
-        // вызовем playTrick нельзя напрямую (package-private), поэтому проверим логику через ход
-        // Здесь проверим базовое: у B есть трефы — значит только трефы
         List<Card> legal = g.legalMoves(b);
-        // currentSuit == null → первый ход; проверим что все не-черви
         assertTrue(legal.stream().allMatch(c -> c.getSuit() != Suit.HEARTS));
     }
-
     @Test
     void noSuitMeansAnyButHeartsUntilBroken() {
         Player p = new Player("A");
         p.addCard(new Card(Suit.HEARTS, Rank.TWO));
         p.addCard(new Card(Suit.DIAMONDS, Rank.THREE));
         HeartsGame g = gameWith(p, new Player("B"), new Player("C"));
-        // эмулируем, что масть хода — трефы и пробоя нет
-        // (нет прямого setter, поэтому проверим через юридический ход вручную)
-        // Просто проверим, что при отсутствии трефы и непробитых червах — только бубна
-        // Для этого нужно состояние с currentSuit; без рефлексии не выйдет,
-        // поэтому проверим косвенно: legalMoves не вернёт черву
-        // (в первом ходе тоже не вернёт)
         assertTrue(g.legalMoves(p).stream().noneMatch(c -> c.getSuit() == Suit.HEARTS));
     }
 }
